@@ -1,8 +1,3 @@
-/*
- * Copyright 2020 HM Revenue & Customs
- *
- */
-
 import org.slf4j.LoggerFactory
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.{FailoverStrategy, ReadConcern, WriteConcern}

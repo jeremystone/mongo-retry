@@ -1,8 +1,3 @@
-/*
- * Copyright 2020 HM Revenue & Customs
- *
- */
-
 import com.mongodb.connection.ClusterConnectionMode
 import org.mongodb.scala._
 import org.mongodb.scala.bson.Document
