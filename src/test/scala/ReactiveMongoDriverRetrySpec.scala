@@ -18,7 +18,8 @@ class ReactiveMongoDriverRetrySpec
     with DockerTestKit
     with DockerKitDockerJava
     with DockerMongoDBService
-    with DockerToxiproxyService {
+    with DockerToxiproxyService
+    with Ports {
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))
 
@@ -26,8 +27,6 @@ class ReactiveMongoDriverRetrySpec
   val driver = new reactivemongo.api.AsyncDriver
 
   import scala.concurrent.Future
-
-  val writeConcern = WriteConcern.ReplicaAcknowledged(2, 10000, journaled = true)
 
   private val failoverStrategy = FailoverStrategy(
     initialDelay = 500.millis,
@@ -40,7 +39,7 @@ class ReactiveMongoDriverRetrySpec
       (prev, i) =>
         for {
           _ <- prev
-          _ <- collection.insert(ordered = false, writeConcern).one(BSONDocument("i" -> i))
+          _ <- collection.insert(ordered = false, WriteConcern.Acknowledged).one(BSONDocument("i" -> i))
             .recover {
               case NonFatal(e) => logger.error(s"Write $i failed", e)
             }
@@ -53,19 +52,24 @@ class ReactiveMongoDriverRetrySpec
       isContainerReady(toxiproxyContainer).futureValue shouldBe true
     }
 
-    "be configured" in {
-      val client = new ToxiproxyClient("localhost", 8474)
 
-      client.createProxy("mongo", "127.0.0.1:27017", "127.0.0.1:34000")
+    "be configured" in {
+      val client = new ToxiproxyClient("localhost", APIPort)
+      mongodbContainer.getIpAddresses().map {
+        ips =>
+          val ip = ips.head
+
+          client.createProxy("mongo", s"0.0.0.0:$ProxyPort", s"$ip:$MongodbPort")
+      }.futureValue
     }
   }
 
   "mongo driver" must {
     "not lose writes" in {
-      val numInserts = 3000
+      val numInserts = 1000
 
       val result: Future[Long] = for {
-        connection <- driver.connect(List("localhost:27017"))
+        connection <- driver.connect(List(s"127.0.0.1:$ProxyPort"))
         database <- connection.database("dbtest")
         collection = database.collection[BSONCollection]("test", failoverStrategy = failoverStrategy)
         _ <- collection.delete().one(BSONDocument.empty)
@@ -77,6 +81,4 @@ class ReactiveMongoDriverRetrySpec
       result.futureValue shouldBe numInserts
     }
   }
-
-
 }

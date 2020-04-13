@@ -15,4 +15,4 @@ libraryDependencies += "eu.rekawek.toxiproxy" % "toxiproxy-java" % "2.1.3"
 libraryDependencies ++= Seq(
   "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-config" % "0.9.9" % "test",
-  "com.whisk" %% "docker-testkit-impl-docker-java" % "0.9.9" % "test")
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test")
