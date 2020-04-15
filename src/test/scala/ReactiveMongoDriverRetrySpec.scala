@@ -1,6 +1,7 @@
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
 import eu.rekawek.toxiproxy.ToxiproxyClient
+import eu.rekawek.toxiproxy.model.ToxicDirection
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
@@ -8,6 +9,7 @@ import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.{FailoverStrategy, ReadConcern, WriteConcern}
 import reactivemongo.bson.BSONDocument
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
@@ -26,25 +28,12 @@ class ReactiveMongoDriverRetrySpec
   val logger = LoggerFactory.getLogger(getClass)
   val driver = new reactivemongo.api.AsyncDriver
 
-  import scala.concurrent.Future
 
   private val failoverStrategy = FailoverStrategy(
     initialDelay = 500.millis,
     retries = 10,
-    delayFactor = _ => 1
+    delayFactor = i => 2 * i
   )
-
-  def doInserts(num: Int, collection: BSONCollection): Future[Unit] =
-    (1 to num).foldLeft(Future.unit) {
-      (prev, i) =>
-        for {
-          _ <- prev
-          _ <- collection.insert(ordered = false, WriteConcern.Acknowledged).one(BSONDocument("i" -> i))
-            .recover {
-              case NonFatal(e) => logger.error(s"Write $i failed", e)
-            }
-        } yield logger.info(s"Done $i")
-    }
 
   "containers" must {
     "be ready" in {
@@ -55,18 +44,29 @@ class ReactiveMongoDriverRetrySpec
 
     "be configured" in {
       val client = new ToxiproxyClient("localhost", APIPort)
-      mongodbContainer.getIpAddresses().map {
-        ips =>
-          val ip = ips.head
 
-          client.createProxy("mongo", s"0.0.0.0:$ProxyPort", s"$ip:$MongodbPort")
-      }.futureValue
+      val mongodbAddress = mongodbContainer.getIpAddresses().map(_.head).futureValue
+      val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort", s"$mongodbAddress:$MongodbPort")
+
+      proxy.toxics().limitData("data limit", ToxicDirection.UPSTREAM, 4096)
     }
   }
 
   "mongo driver" must {
     "not lose writes" in {
-      val numInserts = 1000
+      val numInserts = 100
+
+      def doInserts(num: Int, collection: BSONCollection): Future[Unit] =
+        (1 to num).foldLeft(Future.unit) {
+          (prev, i) =>
+            for {
+              _ <- prev
+              _ <- collection.insert(ordered = false, WriteConcern.Acknowledged).one(BSONDocument("i" -> i))
+                .recover {
+                  case NonFatal(e) => logger.error(s"Write $i failed", e)
+                }
+            } yield logger.info(s"Done $i")
+        }
 
       val result: Future[Long] = for {
         connection <- driver.connect(List(s"127.0.0.1:$ProxyPort"))
