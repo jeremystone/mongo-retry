@@ -1,7 +1,7 @@
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
 
-trait DockerMongoDBService extends DockerKit with Ports{
-
+trait DockerMongoDBService extends DockerKit {
+  self: Ports =>
 
   val mongodbContainer: DockerContainer = DockerContainer("mongo:3.6.14")
     .withHostname("mongo")

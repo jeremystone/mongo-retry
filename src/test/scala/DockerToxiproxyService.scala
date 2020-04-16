@@ -1,6 +1,7 @@
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
 
-trait DockerToxiproxyService extends DockerKit with Ports {
+trait DockerToxiproxyService extends DockerKit {
+  self: Ports =>
 
   val toxiproxyContainer: DockerContainer = DockerContainer("shopify/toxiproxy")
     .withPorts(APIPort -> Some(APIPort), ProxyPort -> Some(ProxyPort))
