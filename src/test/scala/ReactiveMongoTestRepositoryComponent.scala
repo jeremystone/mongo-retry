@@ -40,7 +40,8 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
       count <- collection.count(None, None, 0, None, readConcern = ReadConcern.Majority)
     } yield count
 
-    override def insert(num: Int): Future[Unit] =
+
+    override def insert(num: Int)(callback: Int => Unit): Future[Unit] =
       (1 to num).foldLeft(Future.unit) { (prev, i) =>
         for {
           _ <- prev
@@ -49,7 +50,10 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
             .recover {
               case NonFatal(e) => logger.error(s"Write $i failed", e)
             }
-        } yield logger.debug(s"Done $i")
+        } yield {
+          callback(i)
+          logger.debug(s"Done $i")
+        }
       }
   }
 }

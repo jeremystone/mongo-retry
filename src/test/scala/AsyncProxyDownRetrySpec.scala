@@ -1,3 +1,5 @@
+import java.util.concurrent.CountDownLatch
+
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
 import eu.rekawek.toxiproxy.ToxiproxyClient
@@ -5,7 +7,7 @@ import eu.rekawek.toxiproxy.model.ToxicDirection
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 
-class CloseDuringCommandSendRetrySpec
+class AsyncProxyDownRetrySpec
   extends WordSpec
     with Matchers
     with DockerTestKit
@@ -31,13 +33,23 @@ class CloseDuringCommandSendRetrySpec
       val mongodbAddress = mongodbContainer.getIpAddresses().map(_.head).futureValue
       val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort", s"$mongodbAddress:$MongodbPort")
 
-      proxy.toxics().limitData("data limit", ToxicDirection.UPSTREAM, 4096)
+      val latch = new CountDownLatch(1)
+
+      new Thread(() => {
+        latch.await()
+        proxy.disable()
+        Thread.sleep(100)
+        proxy.enable()
+      }).start()
+
 
       val numInserts = 100
 
       val result = for {
         _ <- testRepository.clear
-        _ <- testRepository.insert(numInserts)()
+        _ <- testRepository.insert(numInserts) { i =>
+          if (i == numInserts / 2) latch.countDown()
+        }
         count <- testRepository.count
       } yield count
 

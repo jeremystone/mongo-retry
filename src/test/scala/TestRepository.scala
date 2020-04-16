@@ -6,10 +6,10 @@ trait TestRepository {
 
   def count: Future[Long]
 
-  def insert(num: Int): Future[Unit]
+  def insert(num: Int)(callback: Int => Unit = Function.const(())): Future[Unit]
 
 }
 
 trait TestRepositoryComponent {
-  def testRepository : TestRepository
+  def testRepository: TestRepository
 }

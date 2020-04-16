@@ -32,7 +32,8 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
     override def count: Future[Long] =
       testCollection.countDocuments(Document.empty).toFuture()
 
-    override def insert(num: Int): Future[Unit] =
+
+    override def insert(num: Int)(callback: Int => Unit): Future[Unit] =
       (1 to num).foldLeft(Future.unit) {
         (prev, i) =>
           for {
@@ -41,7 +42,10 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
               .recover {
                 case NonFatal(e) => logger.error(s"Write $i failed", e)
               }
-          } yield logger.debug(s"Done $i")
+          } yield {
+            callback(i)
+            logger.debug(s"Done $i")
+          }
       }
   }
 }
