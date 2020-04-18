@@ -1,7 +1,8 @@
+package docker
+
 import com.whisk.docker.DockerContainer
 
 trait DockerMongoDBService extends BaseDockerMongoDBService {
-  self: Ports =>
 
   val mongodbContainer = createContainer("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
 

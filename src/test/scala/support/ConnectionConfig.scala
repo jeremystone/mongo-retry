@@ -1,3 +1,5 @@
+package support
+
 trait ConnectionConfig {
   def hosts:Seq[String]
 }

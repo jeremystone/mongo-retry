@@ -1,3 +1,5 @@
+package support
+
 import org.slf4j.LoggerFactory
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.api.{FailoverStrategy, ReadConcern, WriteConcern}
@@ -13,7 +15,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  override lazy val testRepository: TestRepository = new TestRepository with Ports {
+  override lazy val testRepository: TestRepository = new TestRepository {
 
     private val driver = new reactivemongo.api.AsyncDriver
 
@@ -22,6 +24,11 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
       retries = 10,
       delayFactor = i => 2 * i
     )
+
+    private val writeConcern = if (connectionConfig.hosts.size == 1)
+      WriteConcern.Acknowledged
+    else
+      WriteConcern.ReplicaAcknowledged(2, 10000, journaled = true)
 
     private val testConnection = driver.connect(connectionConfig.hosts)
 
@@ -47,7 +54,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
         for {
           _ <- prev
           collection <- testCollection
-          _ <- collection.insert(ordered = false, WriteConcern.Acknowledged).one(BSONDocument("i" -> i))
+          _ <- collection.insert(ordered = false, writeConcern).one(BSONDocument("i" -> i))
             .recover {
               case NonFatal(e) => logger.error(s"Write $i failed", e)
             }

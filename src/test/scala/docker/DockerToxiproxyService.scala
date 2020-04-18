@@ -1,10 +1,15 @@
+package docker
+
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
 
+object DockerToxiproxyService {
+  val ProxyPort = 30000
+  val ProxyAPIPort = 8474
+}
+
 trait DockerToxiproxyService extends DockerKit {
-  self: Ports =>
 
   val toxiproxyContainer: DockerContainer = DockerContainer("shopify/toxiproxy")
-    .withPorts(APIPort -> Some(APIPort), ProxyPort -> Some(ProxyPort))
     .withReadyChecker(DockerReadyChecker.LogLineContains("API HTTP server starting"))
     .withNetworkMode("host")
 

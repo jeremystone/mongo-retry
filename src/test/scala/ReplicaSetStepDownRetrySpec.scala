@@ -2,9 +2,11 @@ import java.util.concurrent.CountDownLatch
 
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
+import docker.{Mongo1DBService, Mongo2DBService, Mongo3DBService}
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
+import support.{ReactiveMongoTestRepositoryComponent, ReplicaSetMongoConnectionConfigComponent}
 
 class ReplicaSetStepDownRetrySpec
   extends WordSpec
@@ -15,7 +17,6 @@ class ReplicaSetStepDownRetrySpec
     with Mongo2DBService
     with Mongo3DBService
     with ReactiveMongoTestRepositoryComponent
-    with Ports
     with ReplicaSetMongoConnectionConfigComponent {
 
   private val logger = LoggerFactory.getLogger(getClass)
@@ -41,10 +42,10 @@ class ReplicaSetStepDownRetrySpec
     "not lose writes" in {
       val latch = new CountDownLatch(1)
 
-      //      new Thread(() => {
-      //        latch.await()
-      //        execMongoCommand(mongodb1Container, 27017, "rs.stepDown(10)")
-      //      }).start()
+      new Thread(() => {
+        latch.await()
+        execMongoCommand(mongodb1Container, 27017, "rs.stepDown(10)")
+      }).start()
 
       val numInserts = 100
 

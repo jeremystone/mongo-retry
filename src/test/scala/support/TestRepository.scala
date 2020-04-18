@@ -1,3 +1,5 @@
+package support
+
 import scala.concurrent.Future
 
 trait TestRepository {

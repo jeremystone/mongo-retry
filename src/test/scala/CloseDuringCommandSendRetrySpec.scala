@@ -1,9 +1,13 @@
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
+import docker.{DockerMongoDBService, DockerToxiproxyService}
 import eu.rekawek.toxiproxy.ToxiproxyClient
 import eu.rekawek.toxiproxy.model.ToxicDirection
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
+import support.{ProxiedMongoConnectionConfigComponent, ReactiveMongoTestRepositoryComponent}
+
+import DockerToxiproxyService._
 
 class CloseDuringCommandSendRetrySpec
   extends WordSpec
@@ -13,8 +17,7 @@ class CloseDuringCommandSendRetrySpec
     with DockerMongoDBService
     with DockerToxiproxyService
     with ReactiveMongoTestRepositoryComponent
-    with Ports
-    with SingleMongoConnectionConfigComponent {
+    with ProxiedMongoConnectionConfigComponent {
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))
 
@@ -27,10 +30,9 @@ class CloseDuringCommandSendRetrySpec
 
   "mongo driver" must {
     "not lose writes" in {
-      val client = new ToxiproxyClient("localhost", APIPort)
+      val client = new ToxiproxyClient("localhost", ProxyAPIPort)
 
-      val mongodbAddress = mongodbContainer.getIpAddresses().map(_.head).futureValue
-      val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort", s"$mongodbAddress:$MongodbPort")
+      val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort", "localhost:27017")
 
       proxy.toxics().limitData("data limit", ToxicDirection.UPSTREAM, 4096)
 

@@ -1,13 +1,12 @@
-import java.io.IOException
+package docker
 
+import com.google.common.base.Charsets.UTF_8
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient, LogStream}
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
-import com.google.common.base.Charsets.UTF_8
 
 import scala.jdk.CollectionConverters._
 
 trait BaseDockerMongoDBService extends DockerKit {
-  self: Ports =>
 
   private lazy val docker = DefaultDockerClient.fromEnv.build
 

@@ -1,3 +1,5 @@
+package support
+
 import com.mongodb.connection.ClusterConnectionMode
 import org.mongodb.scala.bson.Document
 import org.mongodb.scala.{MongoClient, MongoClientSettings, MongoCollection, MongoDatabase, ServerAddress}
@@ -13,12 +15,13 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
-  override lazy val testRepository: TestRepository = new TestRepository with Ports {
+  override lazy val testRepository: TestRepository = new TestRepository {
 
     val settings: MongoClientSettings =
       MongoClientSettings.builder()
         .applyToClusterSettings(b => b.hosts(
-          connectionConfig.hosts.map(new ServerAddress(_)).asJava).mode(ClusterConnectionMode.SINGLE))
+          connectionConfig.hosts.map(new ServerAddress(_)).asJava)
+          .mode(if (connectionConfig.hosts.size == 1) ClusterConnectionMode.SINGLE else ClusterConnectionMode.MULTIPLE))
         .build()
 
     private val mongoClient: MongoClient = MongoClient(settings)
