@@ -1,13 +1,9 @@
-import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
+import com.whisk.docker.DockerContainer
 
-trait DockerMongoDBService extends DockerKit {
+trait DockerMongoDBService extends BaseDockerMongoDBService {
   self: Ports =>
 
-  val mongodbContainer: DockerContainer = DockerContainer("mongo:3.6.14")
-    .withHostname("mongo")
-    .withPorts(MongodbPort -> Some(MongodbPort))
-    .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
-    .withCommand("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
+  val mongodbContainer = createContainer("mongod", "--nojournal", "--smallfiles", "--syncdelay", "0")
 
   abstract override def dockerContainers: List[DockerContainer] =
     mongodbContainer :: super.dockerContainers

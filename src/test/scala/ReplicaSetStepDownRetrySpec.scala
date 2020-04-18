@@ -1,51 +1,35 @@
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
-import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.time.{Second, Seconds, Span}
-
-import scala.collection.JavaConverters._
-import com.spotify.docker.client.DockerClient
-import com.spotify.docker.client.messages.ExecCreation
+import org.scalatest.{Matchers, WordSpec}
+import org.slf4j.LoggerFactory
 
 class ReplicaSetStepDownRetrySpec
   extends WordSpec
     with Matchers
     with DockerTestKit
     with DockerKitDockerJava
-    with DockerMongoDBService
+    with Mongo1DBService
+    with Mongo2DBService
+    with Mongo3DBService
     with ReactiveMongoTestRepositoryComponent
     with Ports {
+
+  private val logger = LoggerFactory.getLogger(getClass)
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))
 
   "containers" must {
     "be ready" in {
-      isContainerReady(mongodbContainer).futureValue shouldBe true
+      isContainerReady(mongodb1Container).futureValue shouldBe true
+      isContainerReady(mongodb2Container).futureValue shouldBe true
+      isContainerReady(mongodb3Container).futureValue shouldBe true
 
-      // FIXME MOVE THIS CODE TO FIND CONTAINER INTO A BASE CONTAINER TRAIT
+      val result = execMongoCommand(mongodb1Container, 27017,
+        """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "localhost:27017" }, { _id: 1, host: "localhost:27018" }, { _id: 2, host: "localhost:27019", arbiterOnly:true }]})""")
+        .futureValue
 
-      import com.spotify.docker.client.DefaultDockerClient
-      import com.spotify.docker.client.DockerClient
-
-      val docker = DefaultDockerClient.fromEnv.build
-
-      val optContainer = docker.listContainers().asScala.find {
-        _.image().contains("mongo")
-      }
-
-      optContainer match {
-        case Some(c) =>
-          val id = c.id()
-
-          val command = Array("sh", "-c", """mongo --eval "db.serverStatus()" """)
-          val execCreation = docker.execCreate(id, command,
-            DockerClient.ExecCreateParam.attachStdout,
-            DockerClient.ExecCreateParam.attachStderr)
-          val output = docker.execStart(execCreation.id)
-          println(output.readFully)
-        case None => println("NO MONGO")
-      }
-
+      logger.info(result)
     }
   }
 

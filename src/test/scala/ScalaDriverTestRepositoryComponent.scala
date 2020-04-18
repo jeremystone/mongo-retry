@@ -1,12 +1,12 @@
 import com.mongodb.connection.ClusterConnectionMode
-import org.mongodb.scala.{MongoClient, MongoClientSettings, MongoCollection, MongoDatabase, ServerAddress}
 import org.mongodb.scala.bson.Document
+import org.mongodb.scala.{MongoClient, MongoClientSettings, MongoCollection, MongoDatabase, ServerAddress}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.Future
-import scala.collection.JavaConverters._
-import scala.util.control.NonFatal
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
+import scala.util.control.NonFatal
 
 trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
 
@@ -27,7 +27,7 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
     private def testCollection: MongoCollection[Document] = database.getCollection("test")
 
     override def clear: Future[Unit] =
-      testCollection.deleteMany(Document.empty).toFuture().map(_ => Future.unit)
+      testCollection.deleteMany(Document.empty).toFuture().map(_ => ())
 
     override def count: Future[Long] =
       testCollection.countDocuments(Document.empty).toFuture()

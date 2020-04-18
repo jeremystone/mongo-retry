@@ -6,6 +6,7 @@ trait DockerToxiproxyService extends DockerKit {
   val toxiproxyContainer: DockerContainer = DockerContainer("shopify/toxiproxy")
     .withPorts(APIPort -> Some(APIPort), ProxyPort -> Some(ProxyPort))
     .withReadyChecker(DockerReadyChecker.LogLineContains("API HTTP server starting"))
+    .withNetworkMode("host")
 
   abstract override def dockerContainers: List[DockerContainer] =
     toxiproxyContainer :: super.dockerContainers

@@ -42,7 +42,6 @@ class AsyncProxyDownRetrySpec
         proxy.enable()
       }).start()
 
-
       val numInserts = 100
 
       val result = for {
