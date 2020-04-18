@@ -3,7 +3,6 @@ import java.util.concurrent.CountDownLatch
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
 import eu.rekawek.toxiproxy.ToxiproxyClient
-import eu.rekawek.toxiproxy.model.ToxicDirection
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -15,6 +14,7 @@ class AsyncProxyDownRetrySpec
     with DockerMongoDBService
     with DockerToxiproxyService
     with ReactiveMongoTestRepositoryComponent
+    with SingleMongoConnectionConfigComponent
     with Ports {
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))

@@ -1,3 +1,5 @@
+import java.util.concurrent.CountDownLatch
+
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
 import org.scalatest.time.{Second, Seconds, Span}
@@ -13,11 +15,13 @@ class ReplicaSetStepDownRetrySpec
     with Mongo2DBService
     with Mongo3DBService
     with ReactiveMongoTestRepositoryComponent
-    with Ports {
+    with Ports
+    with ReplicaSetMongoConnectionConfigComponent {
 
   private val logger = LoggerFactory.getLogger(getClass)
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))
+
 
   "containers" must {
     "be ready" in {
@@ -33,10 +37,26 @@ class ReplicaSetStepDownRetrySpec
     }
   }
 
-
   "mongo driver" must {
     "not lose writes" in {
-      fail
+      val latch = new CountDownLatch(1)
+
+      //      new Thread(() => {
+      //        latch.await()
+      //        execMongoCommand(mongodb1Container, 27017, "rs.stepDown(10)")
+      //      }).start()
+
+      val numInserts = 100
+
+      val result = for {
+        _ <- testRepository.clear
+        _ <- testRepository.insert(numInserts) { i =>
+          if (i == numInserts / 2) latch.countDown()
+        }
+        count <- testRepository.count
+      } yield count
+
+      result.futureValue shouldBe numInserts
     }
   }
 

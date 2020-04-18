@@ -13,7 +13,8 @@ class CloseDuringCommandSendRetrySpec
     with DockerMongoDBService
     with DockerToxiproxyService
     with ReactiveMongoTestRepositoryComponent
-    with Ports {
+    with Ports
+    with SingleMongoConnectionConfigComponent {
 
   implicit val pc = PatienceConfig(Span(60, Seconds), Span(1, Second))
 

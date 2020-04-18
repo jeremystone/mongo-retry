@@ -9,6 +9,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
+  self: ConnectionConfigComponent =>
 
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -16,8 +17,8 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
 
     val settings: MongoClientSettings =
       MongoClientSettings.builder()
-        .applyToClusterSettings(b => b.hosts(List(
-          new ServerAddress(s"127.0.0.1:$ProxyPort")).asJava).mode(ClusterConnectionMode.SINGLE))
+        .applyToClusterSettings(b => b.hosts(
+          connectionConfig.hosts.map(new ServerAddress(_)).asJava).mode(ClusterConnectionMode.SINGLE))
         .build()
 
     private val mongoClient: MongoClient = MongoClient(settings)

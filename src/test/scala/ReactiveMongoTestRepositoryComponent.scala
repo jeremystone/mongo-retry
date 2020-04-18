@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
+  self: ConnectionConfigComponent =>
 
   private val logger = LoggerFactory.getLogger(getClass)
 
@@ -22,7 +23,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
       delayFactor = i => 2 * i
     )
 
-    private val testConnection = driver.connect(List(s"127.0.0.1:$ProxyPort"))
+    private val testConnection = driver.connect(connectionConfig.hosts)
 
     private def testCollection =
       for {
