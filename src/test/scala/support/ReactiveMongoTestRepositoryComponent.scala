@@ -30,7 +30,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
     else
       WriteConcern.ReplicaAcknowledged(2, 10000, journaled = true)
 
-    private val testConnection = driver.connect(connectionConfig.hosts)
+    private def testConnection = driver.connect(connectionConfig.hosts)
 
     private def testCollection =
       for {

@@ -8,18 +8,19 @@ import scala.jdk.CollectionConverters._
 
 trait BaseDockerMongoDBService extends DockerKit {
 
-  private lazy val docker = DefaultDockerClient.fromEnv.build
 
   def createContainer(mongodCommand: String*): DockerContainer = DockerContainer("mongo:3.6.14")
     .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
     .withCommand(mongodCommand: _*)
     .withNetworkMode("host")
 
-  def execMongoCommand(dockerContainer: DockerContainer, port : Int, command: String) = {
+  def execMongoCommand(dockerContainer: DockerContainer, port: Int, command: String) = {
     for (name <- dockerContainer.getName) yield {
 
+      val docker = DefaultDockerClient.fromEnv.build
+
       docker.listContainers().asScala
-        .find ( container => container.names().contains(name))
+        .find(container => container.names().contains(name))
         .map { container =>
           val cmd = Array("sh", "-c", s"""mongo --port $port --eval '$command' """)
           val execCreation = docker.execCreate(
@@ -41,7 +42,7 @@ trait BaseDockerMongoDBService extends DockerKit {
     try {
       while (logStream.hasNext) stringBuilder.append(UTF_8.decode(logStream.next.content))
     }
-    catch{
+    catch {
       case e: Exception => // Ignore ? get 'connection reset by peer' at end of output
     }
     stringBuilder.toString
