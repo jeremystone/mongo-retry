@@ -1,6 +1,7 @@
 package docker
 
 import com.google.common.base.Charsets.UTF_8
+import com.spotify.docker.client.DockerClient.ExecStartParameter
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient, LogStream}
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
 
@@ -9,7 +10,7 @@ import scala.jdk.CollectionConverters._
 trait BaseDockerMongoDBService extends DockerKit {
 
 
-  def createContainer(mongodCommand: String*): DockerContainer = DockerContainer("mongo:3.6.14")
+  def createContainer(mongodCommand: String*): DockerContainer = DockerContainer("mongo:3.6")
     .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
     .withCommand(mongodCommand: _*)
     .withNetworkMode("host")
@@ -28,7 +29,7 @@ trait BaseDockerMongoDBService extends DockerKit {
             DockerClient.ExecCreateParam.attachStdout,
             DockerClient.ExecCreateParam.attachStderr)
 
-          val output = docker.execStart(execCreation.id)
+          val output = docker.execStart(execCreation.id, ExecStartParameter.TTY)
 
           readFully(output)
         }

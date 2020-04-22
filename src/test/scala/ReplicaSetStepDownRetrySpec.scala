@@ -30,11 +30,27 @@ class ReplicaSetStepDownRetrySpec
       isContainerReady(mongodb2Container).futureValue shouldBe true
       isContainerReady(mongodb3Container).futureValue shouldBe true
 
-      val result = execMongoCommand(mongodb1Container, 27017,
+      val initiateResult = execMongoCommand(mongodb1Container, 27017,
         """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "localhost:27017" }, { _id: 1, host: "localhost:27018" }, { _id: 2, host: "localhost:27019", arbiterOnly:true }]})""")
         .futureValue
 
-      logger.info(result)
+      logger.debug(initiateResult)
+
+      // Wait until fully up
+      (1 to 20).find { _ =>
+        val statusResult = execMongoCommand(mongodb1Container, 27017,
+          """rs.status()""")
+          .futureValue
+
+        Thread.sleep(1000)
+
+        logger.debug(statusResult)
+
+        // TODO do properly ...
+        statusResult.contains(""""stateStr" : "PRIMARY"""") &&
+          statusResult.contains(""""stateStr" : "SECONDARY"""") &&
+          statusResult.contains(""""stateStr" : "ARBITER"""")
+      } should not be empty
     }
   }
 

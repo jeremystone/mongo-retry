@@ -30,7 +30,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
     else
       WriteConcern.ReplicaAcknowledged(2, 10000, journaled = true)
 
-    private def testConnection = driver.connect(connectionConfig.hosts)
+    private lazy val testConnection = driver.connect(connectionConfig.hosts)
 
     private def testCollection =
       for {
@@ -54,12 +54,12 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
         for {
           _ <- prev
           collection <- testCollection
+          _ = callback(i)
           _ <- collection.insert(ordered = false, writeConcern).one(BSONDocument("i" -> i))
             .recover {
               case NonFatal(e) => logger.error(s"Write $i failed", e)
             }
         } yield {
-          callback(i)
           logger.debug(s"Done $i")
         }
       }

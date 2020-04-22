@@ -42,12 +42,12 @@ trait ScalaDriverTestRepositoryComponent extends TestRepositoryComponent {
         (prev, i) =>
           for {
             _ <- prev
+            _ = callback(i)
             _ <- testCollection.insertOne(Document("i" -> i)).toFuture()
               .recover {
                 case NonFatal(e) => logger.error(s"Write $i failed", e)
               }
           } yield {
-            callback(i)
             logger.debug(s"Done $i")
           }
       }
