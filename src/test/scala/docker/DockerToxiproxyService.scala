@@ -3,7 +3,9 @@ package docker
 import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
 
 object DockerToxiproxyService {
-  val ProxyPort = 30000
+  val ProxyPort1 = 30001
+  val ProxyPort2 = 30002
+  val ProxyPort3 = 30003
   val ProxyAPIPort = 8474
 }
 

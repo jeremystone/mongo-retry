@@ -60,7 +60,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
               case NonFatal(e) => logger.error(s"Write $i failed", e)
             }
         } yield {
-          logger.debug(s"Done $i")
+          logger.info(s"Done $i")
         }
       }
   }

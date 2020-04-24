@@ -32,7 +32,7 @@ class CloseDuringCommandSendRetrySpec
     "not lose writes" in {
       val client = new ToxiproxyClient("localhost", ProxyAPIPort)
 
-      val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort", "localhost:27017")
+      val proxy = client.createProxy("mongo", s"0.0.0.0:$ProxyPort1", "localhost:27017")
 
       proxy.toxics().limitData("data limit", ToxicDirection.UPSTREAM, 4096)
 
