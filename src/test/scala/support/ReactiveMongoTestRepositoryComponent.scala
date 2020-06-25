@@ -48,7 +48,6 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
       count <- collection.count(None, None, 0, None, readConcern = ReadConcern.Majority)
     } yield count
 
-
     override def insert(num: Int)(callback: Int => Unit): Future[Unit] =
       (1 to num).foldLeft(Future.unit) { (prev, i) =>
         for {
