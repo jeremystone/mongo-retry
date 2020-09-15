@@ -85,6 +85,26 @@ class ReplicaSetStepDownRetrySpec
 
       result.futureValue shouldBe numInserts
     }
+
+    "recover" in {
+      val numInserts = 10
+
+      val result = for {
+        _ <- testRepository.clear
+        _ <- testRepository.insert(numInserts) { i =>
+
+          logger.info(s"Writing $i")
+        }
+          .recover {
+            case e => logger.error(s"insert failed", e)
+          }
+        _ = waitForReplSet
+        _ = logger.info("Counting")
+        count <- testRepository.count
+      } yield count
+
+      result.futureValue shouldBe numInserts
+    }
   }
 
 }
