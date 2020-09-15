@@ -1,6 +1,6 @@
 import com.whisk.docker.impl.dockerjava.DockerKitDockerJava
 import com.whisk.docker.scalatest.DockerTestKit
-import docker.{Mongo1DBService, Mongo2DBService, Mongo3DBService}
+import docker.{Mongo0DBService, Mongo1DBService, Mongo2DBService}
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
@@ -11,9 +11,9 @@ class ReplicaSetStepDownRetrySpec
     with Matchers
     with DockerTestKit
     with DockerKitDockerJava
+    with Mongo0DBService
     with Mongo1DBService
     with Mongo2DBService
-    with Mongo3DBService
     with ReactiveMongoTestRepositoryComponent
     with ReplicaSetMongoConnectionConfigComponent {
 
@@ -24,12 +24,16 @@ class ReplicaSetStepDownRetrySpec
 
   "containers" must {
     "be ready" in {
+      isContainerReady(mongodb0Container).futureValue shouldBe true
       isContainerReady(mongodb1Container).futureValue shouldBe true
       isContainerReady(mongodb2Container).futureValue shouldBe true
-      isContainerReady(mongodb3Container).futureValue shouldBe true
 
-      val initiateResult = execMongoCommand(mongodb1Container, 27017,
-        """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "localhost:27017" }, { _id: 1, host: "localhost:27018" }, { _id: 2, host: "localhost:27019", arbiterOnly:true }]})""")
+      connectToNetwork(mongodb0Container, "mongo-retry_mongo-net")
+      connectToNetwork(mongodb1Container, "mongo-retry_mongo-net")
+      connectToNetwork(mongodb2Container, "mongo-retry_mongo-net")
+
+      val initiateResult = execMongoCommand(mongodb0Container, 27017,
+        """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "mongo0:27017" }, { _id: 1, host: "mongo1:27018" }, { _id: 2, host: "mongo2:27019", arbiterOnly:true }]})""")
         .futureValue
 
       logger.debug(initiateResult)
@@ -41,7 +45,7 @@ class ReplicaSetStepDownRetrySpec
   private def waitForReplSet = {
     (1 to 20).find { i =>
       logger.info(s"Waiting for replset - attempt $i...")
-      val statusResult = execMongoCommand(mongodb1Container, 27017,
+      val statusResult = execMongoCommand(mongodb0Container, 27017,
         """rs.status()""")
         .futureValue
 
@@ -67,7 +71,7 @@ class ReplicaSetStepDownRetrySpec
         _ <- testRepository.insert(numInserts) { i =>
           if (i == numInserts / 2) {
             logger.info("Stepping down")
-            execMongoCommand(mongodb1Container, 27017, "rs.stepDown(10)")
+            execMongoCommand(mongodb0Container, 27017, "rs.stepDown(10)")
           }
           logger.info(s"Writing $i")
         }

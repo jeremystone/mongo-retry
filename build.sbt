@@ -10,8 +10,6 @@ libraryDependencies += "org.mongodb.scala" %% "mongo-scala-driver" % "2.9.0"
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
 
-libraryDependencies += "eu.rekawek.toxiproxy" % "toxiproxy-java" % "2.1.3"
-
 libraryDependencies ++= Seq(
   "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-config" % "0.9.9" % "test",

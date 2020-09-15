@@ -3,17 +3,18 @@ package docker
 import com.google.common.base.Charsets.UTF_8
 import com.spotify.docker.client.DockerClient.ExecStartParameter
 import com.spotify.docker.client.{DefaultDockerClient, DockerClient, LogStream}
-import com.whisk.docker.{DockerContainer, DockerKit, DockerReadyChecker}
+import com.whisk.docker.{DockerContainer, DockerKit, DockerPortMapping, DockerReadyChecker}
 
 import scala.jdk.CollectionConverters._
 
 trait BaseDockerMongoDBService extends DockerKit {
 
-
-  def createContainer(mongodCommand: String*): DockerContainer = DockerContainer("mongo:3.6")
-    .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
-    .withCommand(mongodCommand: _*)
-    .withNetworkMode("host")
+  def createContainer(name: String, ps: (Int, Int), entryPoint: String*): DockerContainer =
+    DockerContainer("mongo:3.6", name = Some(name))
+      .withReadyChecker(DockerReadyChecker.LogLineContains("waiting for connections on port"))
+      .withEntrypoint(entryPoint: _*)
+      .withPortMapping(ps._1 -> DockerPortMapping(Some(ps._2)))
+      .withNetworkMode("bridge")
 
   def execMongoCommand(dockerContainer: DockerContainer, port: Int, command: String) = {
     for (name <- dockerContainer.getName) yield {
@@ -32,6 +33,20 @@ trait BaseDockerMongoDBService extends DockerKit {
           val output = docker.execStart(execCreation.id, ExecStartParameter.TTY)
 
           readFully(output)
+        }
+        .getOrElse("Container not found")
+    }
+  }
+
+  def connectToNetwork(dockerContainer: DockerContainer, networkId: String) = {
+    for (name <- dockerContainer.getName) yield {
+
+      val docker = DefaultDockerClient.fromEnv.build
+
+      docker.listContainers().asScala
+        .find(container => container.names().contains(name))
+        .map { container =>
+          docker.connectToNetwork(container.id(), networkId)
         }
         .getOrElse("Container not found")
     }
