@@ -1,0 +1,5 @@
+import support.ReactiveMongoTestRepositoryComponent
+
+class ReactiveMongoSpec
+  extends ReplicaSetStepDownRetrySpec
+    with ReactiveMongoTestRepositoryComponent

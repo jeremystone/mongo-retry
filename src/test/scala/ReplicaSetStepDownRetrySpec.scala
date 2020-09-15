@@ -4,9 +4,9 @@ import docker.{Mongo0DBService, Mongo1DBService, Mongo2DBService}
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-import support.{ReactiveMongoTestRepositoryComponent, ReplicaSetMongoConnectionConfigComponent}
+import support.{ReactiveMongoTestRepositoryComponent, ReplicaSetMongoConnectionConfigComponent, TestRepositoryComponent}
 
-class ReplicaSetStepDownRetrySpec
+trait ReplicaSetStepDownRetrySpec
   extends WordSpec
     with Matchers
     with DockerTestKit
@@ -14,8 +14,8 @@ class ReplicaSetStepDownRetrySpec
     with Mongo0DBService
     with Mongo1DBService
     with Mongo2DBService
-    with ReactiveMongoTestRepositoryComponent
     with ReplicaSetMongoConnectionConfigComponent {
+  self: TestRepositoryComponent =>
 
   private val logger = LoggerFactory.getLogger(getClass)
 
