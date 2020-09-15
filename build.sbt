@@ -14,3 +14,5 @@ libraryDependencies ++= Seq(
   "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-config" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test")
+
+parallelExecution in Test := false
