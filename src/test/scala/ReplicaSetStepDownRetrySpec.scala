@@ -4,7 +4,7 @@ import docker.{Mongo0DBService, Mongo1DBService, Mongo2DBService}
 import org.scalatest.time.{Second, Seconds, Span}
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-import support.{ReactiveMongoTestRepositoryComponent, ReplicaSetMongoConnectionConfigComponent, TestRepositoryComponent}
+import support.{ReplicaSetMongoConnectionConfigComponent, TestRepositoryComponent}
 
 trait ReplicaSetStepDownRetrySpec
   extends WordSpec
@@ -21,16 +21,17 @@ trait ReplicaSetStepDownRetrySpec
 
   implicit val pc: PatienceConfig = PatienceConfig(Span(60, Seconds), Span(1, Second))
 
-
   "containers" must {
     "be ready" in {
+      createNetwork()
+
       isContainerReady(mongodb0Container).futureValue shouldBe true
       isContainerReady(mongodb1Container).futureValue shouldBe true
       isContainerReady(mongodb2Container).futureValue shouldBe true
 
-      connectToNetwork(mongodb0Container, "mongo-retry_mongo-net")
-      connectToNetwork(mongodb1Container, "mongo-retry_mongo-net")
-      connectToNetwork(mongodb2Container, "mongo-retry_mongo-net")
+      connectToNetwork(mongodb0Container)
+      connectToNetwork(mongodb1Container)
+      connectToNetwork(mongodb2Container)
 
       val initiateResult = execMongoCommand(mongodb0Container, 27017,
         """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "mongo0:27017" }, { _id: 1, host: "mongo1:27018" }, { _id: 2, host: "mongo2:27019", arbiterOnly:true }]})""")
