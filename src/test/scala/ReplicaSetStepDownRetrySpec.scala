@@ -29,9 +29,9 @@ trait ReplicaSetStepDownRetrySpec
       isContainerReady(mongodb1Container).futureValue shouldBe true
       isContainerReady(mongodb2Container).futureValue shouldBe true
 
-      connectToNetwork(mongodb0Container)
-      connectToNetwork(mongodb1Container)
-      connectToNetwork(mongodb2Container)
+      connectToNetwork(mongodb0Container).futureValue
+      connectToNetwork(mongodb1Container).futureValue
+      connectToNetwork(mongodb2Container).futureValue
 
       val initiateResult = execMongoCommand(mongodb0Container, 27017,
         """rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "mongo0:27017" }, { _id: 1, host: "mongo1:27018" }, { _id: 2, host: "mongo2:27019", arbiterOnly:true }]})""")
