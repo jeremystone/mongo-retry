@@ -25,10 +25,7 @@ trait ReactiveMongoTestRepositoryComponent extends TestRepositoryComponent {
       delayFactor = i => 2 * i
     )
 
-    private val writeConcern = if (connectionConfig.hosts.size == 1)
-      WriteConcern.Acknowledged
-    else
-      WriteConcern.ReplicaAcknowledged(2, 10000, journaled = true)
+    private val writeConcern = WriteConcern.Default
 
     private lazy val testConnection = driver.connect(connectionConfig.hosts)
 
