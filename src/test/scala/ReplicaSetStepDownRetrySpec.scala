@@ -65,7 +65,7 @@ trait ReplicaSetStepDownRetrySpec
 
   "mongo driver" must {
     "not lose writes" in {
-      val numInserts = 100
+      val numInserts = 300
 
       val result = for {
         _ <- testRepository.clear
