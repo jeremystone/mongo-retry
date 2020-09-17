@@ -4,7 +4,7 @@ version := "0.1"
 
 scalaVersion := "2.13.1"
 
-libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "0.18.8"
+libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "1.0.0"
 libraryDependencies += "org.mongodb.scala" %% "mongo-scala-driver" % "2.9.0"
 
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.30"
